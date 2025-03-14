@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: company-service
+  config:
+    import: default-config-docker.yml

@@ -1,0 +1,6 @@
+spring:
+  config:
+    import: db-config.yml, eureka-config-docker.yml
+
+server:
+  port: 0
