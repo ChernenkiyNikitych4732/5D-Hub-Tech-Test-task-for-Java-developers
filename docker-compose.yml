@@ -1,0 +1,64 @@
+version: "3.8"
+services:
+  config-server:
+    container_name: config-server
+    build: ./config-server
+    healthcheck:
+      test: wget -qO- http://localhost:8002/actuator/health | grep UP || exit 1
+      interval: 11s
+      timeout: 8s
+      retries: 5
+
+  discovery-server:
+    container_name: discovery-server
+    build: ./discovery-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: wget -qO- http://localhost:8761/actuator/health  | grep UP || exit 1
+      interval: 11s
+      timeout: 8s
+      retries: 5
+    depends_on:
+      config-server:
+        condition: service_healthy
+
+  gateway-service:
+    container_name: gateway-service
+    build: ./gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: wget -qO- http://localhost:8080/actuator/health  | grep UP || exit 1
+      interval: 11s
+      timeout: 8s
+      retries: 5
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+
+  company-service:
+    container_name: company-service
+    build: ./company-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      config-server:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
+
+  user-service:
+    container_name: user-service
+    build: ./user-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      config-server:
+        condition: service_healthy
+      gateway-service:
+        condition: service_healthy
